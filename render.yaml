@@ -1,9 +1,9 @@
 services:
   - type: web
-    name: olap-analytics
+    name: nexora-api
     runtime: python
     plan: free
-    repo: https://github.com/ibis-frost/olap-analytics
+    repo: https://github.com/varsha-kotegar/NEXORA
     branch: main
     rootDir: .
     buildCommand: |

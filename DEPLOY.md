@@ -1,60 +1,38 @@
 # Deploy Guide
 
-Deploy the full stack (API + dashboard) on **Render free tier** in one service.
+Deploy the backend API on **Render** and the React dashboard on **Vercel** (or deploy both together on Render).
 
-## Quick deploy (about 5 minutes)
+## Option 1: Vercel (Frontend) + Render (API)
 
-### 1. Push to GitHub
+### 1. Deploy the API on Render
 
-```powershell
-cd c:\Users\15cal\projects\helloworld
-git init
-git add .
-git commit -m "OLAP analytics demo"
-```
+1. Go to [dashboard.render.com](https://dashboard.render.com) → **New** → **Blueprint**
+2. Connect your GitHub account and select `varsha-kotegar/NEXORA`
+3. Render reads `render.yaml` automatically — click **Apply**
+4. Optional: add `DATABASE_URL` with a [Neon](https://neon.tech) Postgres connection string (if omitted, the build uses the CSV fallback)
+5. Copy your Render service URL (e.g. `https://nexora-api.onrender.com`)
 
-Create a new repo at https://github.com/new (name it `olap-analytics`), then:
+### 2. Deploy the Dashboard on Vercel
 
-```powershell
-git remote add origin https://github.com/YOUR_USERNAME/olap-analytics.git
-git branch -M main
-git push -u origin main
-```
+1. Go to [vercel.com/new](https://vercel.com/new) and import `varsha-kotegar/NEXORA`
+2. Set **Root Directory** to `web`
+3. Add environment variable:
+   - `VITE_API_URL` = `https://nexora-api.onrender.com`
+4. Click **Deploy** and copy your Vercel URL (e.g. `https://nexora.vercel.app`)
 
-### 2. Deploy on Render
+### 3. Configure CORS
 
-1. Go to https://dashboard.render.com
-2. Click **New** → **Blueprint**
-3. Connect your GitHub account and select the `olap-analytics` repo
-4. Render reads `render.yaml` automatically
-5. Click **Apply**
+In your Render service **Environment** settings, set `CORS_ORIGINS` to your Vercel URL (e.g. `https://nexora.vercel.app`) and redeploy.
 
-Optional: add `DATABASE_URL` in the Render dashboard with a [Neon](https://neon.tech) Postgres connection string. If omitted, the build uses the CSV fallback (still works for the demo).
+## Option 2: Single-Service Deploy on Render
 
-Your live app will be at:
+`render.yaml` also builds `web/` and serves the static frontend from FastAPI at `/`, with API docs at `/docs` and health check at `/health`.
 
-`https://olap-analytics.onrender.com` (or similar)
-
-- Dashboard: `/`
-- API docs: `/docs`
-- Health: `/health`
-
-> **Note:** Free tier sleeps after ~15 min idle. First load may take ~30s.
-
-## Optional: split frontend + API
-
-| Component | Service | Root directory | Env vars |
-|-----------|---------|----------------|----------|
-| API | Render Web Service | `.` | `DATABASE_URL`, `CORS_ORIGINS` |
-| UI | Vercel | `web` | `VITE_API_URL=https://your-api.onrender.com` |
-
-Use this if you want separate Vercel hosting for the React app.
+> **Note:** Render free tier sleeps after ~15 min of inactivity. First request may take ~30s.
 
 ## Verify after deploy
 
 ```powershell
-curl https://YOUR-APP.onrender.com/health
-curl https://YOUR-APP.onrender.com/api/metrics/summary
+curl https://YOUR-API-URL/health
+curl https://YOUR-API-URL/api/metrics/summary
 ```
-
-Then open `https://YOUR-APP.onrender.com` in your browser.
